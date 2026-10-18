@@ -31,6 +31,7 @@ import { Units } from "../../shared/units";
 import { GITHUB_REPOSITORY } from "../github";
 import { loadAssets } from "./assetLoader";
 import { isAlpha, isBeta, isBetaExpired, isBetaWelcomeComplete, saveBetaWelcomeComplete } from "./betaUtil";
+import { getEmbeddedLogUrl, IS_EMBEDDED, startEmbedChannel } from "./embed";
 import { LocalStorageKeys } from "./localStorageKeys";
 
 let HUB_FRAME: HTMLIFrameElement;
@@ -255,7 +256,7 @@ async function initHub() {
 
   // Init messages
   sendMessage(hubPort, "set-version", {
-    platform: "lite",
+    platform: IS_EMBEDDED ? "lite-embedded" : "lite", // Embedded hides the title bar and menus
     platformRelease: "",
     platformArch: "",
     appVersion: LITE_VERSION
@@ -270,6 +271,7 @@ async function initHub() {
   let state = localStorage.getItem(LocalStorageKeys.STATE);
   if (state !== null) sendMessage(hubPort, "restore-state", JSON.parse(state));
   sendMessage(hubPort, "show-when-ready");
+  startEmbedChannel(HUB_FRAME, (name) => sendMessage(hubPort, "open-files", { files: [name], merge: false }));
 
   // Add cursor event handlers
   HUB_FRAME.contentWindow?.addEventListener("contextmenu", (event) => {
@@ -341,7 +343,9 @@ async function handleHubMessage(message: NamedMessage) {
         let prefsRaw = localStorage.getItem(LocalStorageKeys.PREFS);
         if (prefsRaw !== null) mergePreferences(prefs, JSON.parse(prefsRaw));
 
-        let response = await fetch(`logs/${encodeURIComponent(path)}?folder=${encodeURIComponent(prefs.remotePath)}`);
+        let response = await fetch(
+          getEmbeddedLogUrl(path) ?? `logs/${encodeURIComponent(path)}?folder=${encodeURIComponent(prefs.remotePath)}`
+        );
         let buffer = await response.arrayBuffer();
         let array = new Uint8Array(buffer);
 
