@@ -12,6 +12,7 @@
  * Page to viewer:
  *   { type: "ascope:open-log", url: string, name: string }
  *   { type: "ascope:set-time", time: number }
+ *   { type: "ascope:set-playing", playing: boolean }
  *   { type: "ascope:key", event: "keydown" | "keyup", key: string, code: string,
  *     shiftKey: boolean, ctrlKey: boolean, metaKey: boolean, altKey: boolean, repeat: boolean }
  * Viewer to page:
@@ -63,6 +64,10 @@ export function startEmbedChannel(hubFrame: HTMLIFrameElement, openFile: (name: 
         break;
       case "ascope:set-time":
         if (typeof message.time === "number") getSelection()?.setSelectedTime(message.time);
+        break;
+      case "ascope:set-playing":
+        if (message.playing === true) getSelection()?.play();
+        else if (message.playing === false) getSelection()?.pause();
         break;
       case "ascope:key":
         // A key pressed on the page, handled as if pressed in this window
