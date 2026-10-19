@@ -31,7 +31,7 @@ import { Units } from "../../shared/units";
 import { GITHUB_REPOSITORY } from "../github";
 import { loadAssets } from "./assetLoader";
 import { isAlpha, isBeta, isBetaExpired, isBetaWelcomeComplete, saveBetaWelcomeComplete } from "./betaUtil";
-import { getEmbeddedLogUrl, IS_EMBEDDED, startEmbedChannel } from "./embed";
+import { getEmbeddedLogUrl, IS_EMBEDDED, reportEmbeddedState, startEmbedChannel } from "./embed";
 import { LocalStorageKeys } from "./localStorageKeys";
 
 let HUB_FRAME: HTMLIFrameElement;
@@ -271,7 +271,6 @@ async function initHub() {
   let state = localStorage.getItem(LocalStorageKeys.STATE);
   if (state !== null) sendMessage(hubPort, "restore-state", JSON.parse(state));
   sendMessage(hubPort, "show-when-ready");
-  startEmbedChannel(HUB_FRAME, (name) => sendMessage(hubPort, "open-files", { files: [name], merge: false }));
 
   // Add cursor event handlers
   HUB_FRAME.contentWindow?.addEventListener("contextmenu", (event) => {
@@ -302,6 +301,7 @@ async function handleHubMessage(message: NamedMessage) {
   switch (message.name) {
     case "show":
       HUB_FRAME.style.opacity = "100%";
+      startEmbedChannel(HUB_FRAME, (name, data) => sendMessage(hubPort, name, data));
       break;
 
     case "alert":
@@ -311,6 +311,7 @@ async function handleHubMessage(message: NamedMessage) {
 
     case "save-state":
       localStorage.setItem(LocalStorageKeys.STATE, JSON.stringify(message.data));
+      reportEmbeddedState(message.data);
       break;
 
     case "save-type-memory":

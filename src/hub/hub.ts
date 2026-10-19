@@ -385,6 +385,8 @@ function startHistorical(path: string, clear = true, merge = false) {
             }
             originalTimelineRange = null;
             originalTimelineIsMaxZoom = null;
+            // Embedded, the containing page can set the time and zoom now (src/main/lite/embed.ts)
+            window.dispatchEvent(new Event("historical-opened"));
           }
           break;
         case HistoricalDataSourceStatus.Error:
