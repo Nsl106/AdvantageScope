@@ -286,7 +286,13 @@ window.requestAnimationFrame(periodic);
 // DATA SOURCE HANDLING
 
 function checkLiveAutoStart() {
-  if (DISTRIBUTION == Distribution.Lite && window.preferences !== null && !liveAutoStartComplete) {
+  // Embedded, the containing page opens a log instead (src/main/lite/embed.ts)
+  if (
+    DISTRIBUTION == Distribution.Lite &&
+    window.platform !== "lite-embedded" &&
+    window.preferences !== null &&
+    !liveAutoStartComplete
+  ) {
     startLive();
     liveAutoStartComplete = true;
   }
