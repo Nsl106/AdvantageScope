@@ -163,6 +163,14 @@
 
       .popup-menu {
         min-width: 150px;
+        /* The rest of Lite's font, instead of "sans-serif" at weight 100, which is a hairline
+        where that font has a thin weight (such as Inter on Linux) */
+        font-family: inherit;
+      }
+
+      .popup-menu .popup-menu--container .popup-menu--submenu,
+      .popup-menu .popup-menu--container .popup-menu--item {
+        font-weight: normal;
       }
 
       .popup-menu .popup-menu--container .popup-menu--submenu .popup-menu--submenu-arrow svg {
