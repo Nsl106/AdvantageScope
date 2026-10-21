@@ -70,6 +70,7 @@ export default class Sidebar {
   private selectGroup: string[] = [];
   private selectGroupClearCallbacks: (() => void)[] = [];
   private searchKey: string | null = null;
+  private searchHighlight: { key: string; until: number } | null = null;
   private searchExpandCallbacks: (() => void)[] = [];
   private searchHoveredIndex: number | null = null;
   private searchResults: string[] = [];
@@ -318,6 +319,7 @@ export default class Sidebar {
   private runSearch() {
     if (this.searchHoveredIndex === null || this.searchHoveredIndex >= this.searchResults.length) return;
     this.searchKey = this.searchResults[this.searchHoveredIndex];
+    this.searchHighlight = { key: this.searchKey, until: Date.now() + 3000 };
     this.searchExpandCallbacks.forEach((callback) => callback());
     this.searchKey = null;
     this.SEARCH_INPUT.blur();
@@ -429,6 +431,7 @@ export default class Sidebar {
       this.setTuningModeActiveCallbacks = [];
       this.tuningModePublishCallbacks = [];
       this.updateMetadataCallbacks = [];
+      this.searchExpandCallbacks = [];
 
       // Add new list
       let tree = window.log.getFieldTree();
@@ -701,13 +704,20 @@ export default class Sidebar {
       });
 
       // Search expand callback
+      // Also runs when the list is rebuilt during the highlight, which expanding for search
+      // does when it loads new fields
       let highlightForSearch = () => {
-        if (this.searchKey !== null && field.fullKey === this.searchKey) {
+        if (this.searchHighlight === null || field.fullKey !== this.searchHighlight.key) return;
+        let remaining = this.searchHighlight.until - Date.now();
+        if (remaining <= 0) return;
+        if ("scrollIntoViewIfNeeded" in fieldElement) {
           // @ts-expect-error
           fieldElement.scrollIntoViewIfNeeded(); // Available in Chromium but not standard
-          fieldElementContainer.classList.add("highlight");
-          setTimeout(() => fieldElementContainer.classList.remove("highlight"), 3000);
+        } else {
+          fieldElement.scrollIntoView({ block: "nearest" });
         }
+        fieldElementContainer.classList.add("highlight");
+        setTimeout(() => fieldElementContainer.classList.remove("highlight"), remaining);
       };
       this.searchExpandCallbacks.push(highlightForSearch);
       highlightForSearch(); // Try immediately in case this field was generating while expanding for search
